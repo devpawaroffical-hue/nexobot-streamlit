@@ -4,7 +4,7 @@ from groq import Groq
 
 # --------- CONFIG ---------
 # Groq API key will come from environment (Streamlit secrets later)
-GROQ_API_KEY = GROQ_API_KEY = st.secrets.get("GROQ_API_KEY")
+GROQ_API_KEY = GROQ_API_KEY = st.secrets.get(""GROQ_API_KEY")
 
 client = Groq(api_key=GROQ_API_KEY)
 
