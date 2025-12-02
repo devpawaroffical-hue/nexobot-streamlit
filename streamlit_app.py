@@ -1,5 +1,6 @@
 import streamlit as st
 from groq import Groq
+import html
 
 # -----------------------------
 # PAGE CONFIG
@@ -47,7 +48,7 @@ def new_chat():
 
 
 # -----------------------------
-# STYLES (custom chat UI)
+# STYLES (grey-black + side panels + actions)
 # -----------------------------
 st.markdown(
     """
@@ -59,9 +60,9 @@ body, .stApp {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* Layout styling */
+/* Main container */
 .block-container {
-    max-width: 900px;
+    max-width: 1100px;
     padding-top: 1.4rem;
     padding-bottom: 2rem;
 }
@@ -73,9 +74,30 @@ header, #MainMenu, footer {visibility: hidden;}
     font-weight: 600;
 }
 
-/* Chat panel box */
+/* Side card style (minimal + slight purple vibe) */
+.side-card {
+    background: #15171a;
+    border-radius: 14px;
+    border: 1px solid #262932;
+    padding: 14px 14px 10px 14px;
+    color: #d1d5db;
+    font-size: 0.9rem;
+}
+.side-card h4 {
+    margin-top: 0;
+    margin-bottom: 0.4rem;
+    font-size: 0.98rem;
+    font-weight: 600;
+}
+.side-card ul {
+    padding-left: 18px;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Chat panel */
 .chat-panel {
-    margin-top: 0.7rem;
+    margin-top: 0.4rem;
     background: #15171a;
     border-radius: 14px;
     border: 1px solid #2b2e33;
@@ -87,12 +109,12 @@ header, #MainMenu, footer {visibility: hidden;}
 /* Message rows */
 .msg-row {
     display: flex;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 .msg-row.assistant { justify-content: flex-start; }
 .msg-row.user { justify-content: flex-end; }
 
-/* Message bubbles */
+/* Bubbles */
 .bubble {
     max-width: 78%;
     padding: 10px 14px;
@@ -101,19 +123,48 @@ header, #MainMenu, footer {visibility: hidden;}
     line-height: 1.4;
     word-wrap: break-word;
 }
-
-/* Assistant messages: BLACK bubble */
+/* Assistant: pure black bubble */
 .bubble.assistant {
     background: #000000;
-    border: 1px solid #2d2f34;
+    border: 1px solid #303238;
     color: #f5f5f5;
 }
-
-/* User messages: light grey-black */
+/* User: soft grey-black bubble */
 .bubble.user {
     background: #1c1f24;
     border: 1px solid #34373d;
     color: #ffffff;
+}
+
+/* Action row under assistant messages */
+.msg-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: #9ca3af;
+}
+.msg-actions span {
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid transparent;
+    transition: 0.15s;
+}
+.msg-actions span:hover {
+    background: #20222a;
+}
+
+/* Active like/dislike states */
+.msg-actions .like-btn.active {
+    border-color: #22c55e;
+    color: #22c55e;
+}
+.msg-actions .dislike-btn.active {
+    border-color: #f97373;
+    color: #f97373;
 }
 
 /* Input area */
@@ -125,7 +176,7 @@ header, #MainMenu, footer {visibility: hidden;}
     padding: 6px 10px 6px 14px;
 }
 
-/* Text input inside */
+/* Text input */
 div[data-baseweb="input"] {
     background: transparent !important;
     border: none !important;
@@ -143,8 +194,8 @@ div[data-baseweb="input"] input {
 /* Send button */
 .stButton>button {
     border-radius: 999px;
-    border: 1px solid #3b82f6;
-    background: #3b82f6;
+    border: 1px solid #6366f1;
+    background: #6366f1;
     color: #ffffff;
     font-size: 0.9rem;
     padding: 0.3rem 1rem;
@@ -161,17 +212,17 @@ div[data-baseweb="input"] input {
 # -----------------------------
 # HEADER
 # -----------------------------
-col1, col2 = st.columns([0.75, 0.25])
-with col1:
+top_left, top_right = st.columns([0.7, 0.3])
+with top_left:
     st.markdown('<div class="chat-title">XO AI (Free)</div>', unsafe_allow_html=True)
-with col2:
+with top_right:
     if st.button("New chat"):
         new_chat()
 
 st.divider()
 
 # -----------------------------
-# MODEL SELECTOR (Groq free)
+# MODEL SELECTOR (full width)
 # -----------------------------
 model_choice = st.selectbox(
     "Choose free Groq model:",
@@ -190,60 +241,158 @@ MODEL_MAP = {
 MODEL_NAME = MODEL_MAP[model_choice]
 
 # -----------------------------
-# CHAT PANEL (no st.chat_message, no faces)
+# THREE-COLUMN LAYOUT
 # -----------------------------
-st.markdown('<div class="chat-panel">', unsafe_allow_html=True)
+left_col, chat_col, right_col = st.columns([0.22, 0.56, 0.22])
 
-for msg in st.session_state.messages:
-    role = msg["role"]
-    cls = "user" if role == "user" else "assistant"
+# LEFT PANEL
+with left_col:
     st.markdown(
-        f"""
-        <div class="msg-row {cls}">
-            <div class="bubble {cls}">
-                {msg["content"]}
-            </div>
+        """
+        <div class="side-card">
+            <h4>⚙️ XO AI Tools</h4>
+            <ul>
+                <li>Study & exam help</li>
+                <li>Maths & coding solver</li>
+                <li>Business & finance ideas</li>
+                <li>Daily planning & routines</li>
+                <li>Emotional support & mindset</li>
+            </ul>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-st.markdown("</div>", unsafe_allow_html=True)
+# RIGHT PANEL
+with right_col:
+    st.markdown(
+        """
+        <div class="side-card">
+            <h4>💡 Suggested prompts</h4>
+            <ul>
+                <li>“Explain this topic like I’m 15…”</li>
+                <li>“Make a 7-day study plan…”</li>
+                <li>“Fix and clean this paragraph…”</li>
+                <li>“Help me create a gym routine…”</li>
+                <li>“I feel low, talk to me…”</li>
+            </ul>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # -----------------------------
-# INPUT AREA
+# CHAT PANEL (CENTER)
 # -----------------------------
-st.markdown('<div class="input-card">', unsafe_allow_html=True)
-with st.form("chat-input", clear_on_submit=True):
-    c1, c2 = st.columns([0.85, 0.15])
-    with c1:
-        user_text = st.text_input(
-            "",
-            placeholder="Ask XO AI anything...",
-            label_visibility="collapsed",
+with chat_col:
+    st.markdown('<div class="chat-panel">', unsafe_allow_html=True)
+
+    # helper to escape message text for HTML
+    def format_msg(text: str) -> str:
+        return html.escape(text).replace("\n", "<br>")
+
+    for idx, msg in enumerate(st.session_state.messages):
+        role = msg["role"]
+        cls = "user" if role == "user" else "assistant"
+        safe_text = format_msg(msg["content"])
+
+        # bubble
+        st.markdown(
+            f"""
+            <div class="msg-row {cls}">
+                <div class="bubble {cls}">
+                    {safe_text}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
-    with c2:
-        send = st.form_submit_button("Send")
-st.markdown("</div>", unsafe_allow_html=True)
 
-# -----------------------------
-# HANDLE SEND
-# -----------------------------
-if send and user_text.strip():
-    content = user_text.strip()
+        # actions only for assistant messages
+        if role == "assistant":
+            # data-text for JS copy
+            data_text = html.escape(msg["content"]).replace("\n", "\\n")
+            st.markdown(
+                f"""
+                <div class="msg-row {cls}">
+                    <div class="msg-actions">
+                        <span class="like-btn" data-id="{idx}">👍 Like</span>
+                        <span class="dislike-btn" data-id="{idx}">👎 Dislike</span>
+                        <span class="copy-btn" data-text="{data_text}">📋 Copy</span>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-    # add user message
-    st.session_state.messages.append({"role": "user", "content": content})
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    # call Groq
-    with st.spinner("XO AI is thinking..."):
-        response = client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=[{"role": "system", "content": SYSTEM_PROMPT}]
-            + st.session_state.messages,
-        )
-        reply = response.choices[0].message.content
+    # JS for like/dislike/copy
+    st.markdown(
+        """
+        <script>
+        // Copy button
+        document.querySelectorAll('.copy-btn').forEach(function(btn) {
+            btn.onclick = function() {
+                const text = this.getAttribute('data-text').replace(/\\n/g, "\\n");
+                navigator.clipboard.writeText(text).then(() => {
+                    const old = this.innerText;
+                    this.innerText = '✅ Copied';
+                    setTimeout(() => { this.innerText = old; }, 1200);
+                });
+            };
+        });
 
-    # add assistant message
-    st.session_state.messages.append({"role": "assistant", "content": reply})
-    st.rerun()
+        // Like buttons
+        document.querySelectorAll('.like-btn').forEach(function(btn) {
+            btn.onclick = function() {
+                this.classList.toggle('active');
+                const sib = this.parentElement.querySelector('.dislike-btn');
+                if (sib) sib.classList.remove('active');
+            };
+        });
+
+        // Dislike buttons
+        document.querySelectorAll('.dislike-btn').forEach(function(btn) {
+            btn.onclick = function() {
+                this.classList.toggle('active');
+                const sib = this.parentElement.querySelector('.like-btn');
+                if (sib) sib.classList.remove('active');
+            };
+        });
+        </script>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # -------------------------
+    # INPUT AREA (CENTER)
+    # -------------------------
+    st.markdown('<div class="input-card">', unsafe_allow_html=True)
+    with st.form("chat-input", clear_on_submit=True):
+        c1, c2 = st.columns([0.85, 0.15])
+        with c1:
+            user_text = st.text_input(
+                "",
+                placeholder="Ask XO AI anything...",
+                label_visibility="collapsed",
+            )
+        with c2:
+            send = st.form_submit_button("Send")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # HANDLE SEND
+    if send and user_text.strip():
+        content = user_text.strip()
+        st.session_state.messages.append({"role": "user", "content": content})
+
+        with st.spinner("XO AI is thinking..."):
+            response = client.chat.completions.create(
+                model=MODEL_NAME,
+                messages=[{"role": "system", "content": SYSTEM_PROMPT}]
+                + st.session_state.messages,
+            )
+            reply = response.choices[0].message.content
+
+        st.session_state.messages.append({"role": "assistant", "content": reply})
+        st.rerun()
