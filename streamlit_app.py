@@ -52,11 +52,14 @@ def new_chat():
 st.markdown(
     """
 <style>
+/* App background */
 body, .stApp {
-    background: #050607;
+    background: #111215;
     color: #f5f5f5;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
+
+/* Layout styling */
 .block-container {
     max-width: 900px;
     padding-top: 1.4rem;
@@ -64,63 +67,65 @@ body, .stApp {
 }
 header, #MainMenu, footer {visibility: hidden;}
 
-/* title */
+/* Title */
 .chat-title {
     font-size: 1.5rem;
     font-weight: 600;
 }
 
-/* chat panel */
+/* Chat panel box */
 .chat-panel {
     margin-top: 0.7rem;
-    background: #080a0f;
+    background: #15171a;
     border-radius: 14px;
-    border: 1px solid #1f2933;
+    border: 1px solid #2b2e33;
     padding: 14px 16px;
     max-height: calc(100vh - 260px);
     overflow-y: auto;
 }
 
-/* message rows */
+/* Message rows */
 .msg-row {
     display: flex;
     margin-bottom: 8px;
 }
-.msg-row.assistant {
-    justify-content: flex-start;
-}
-.msg-row.user {
-    justify-content: flex-end;
-}
+.msg-row.assistant { justify-content: flex-start; }
+.msg-row.user { justify-content: flex-end; }
 
-/* bubbles */
+/* Message bubbles */
 .bubble {
     max-width: 78%;
-    padding: 8px 12px;
-    border-radius: 12px;
+    padding: 10px 14px;
+    border-radius: 14px;
     font-size: 0.95rem;
     line-height: 1.4;
     word-wrap: break-word;
 }
+
+/* Assistant messages: BLACK bubble */
 .bubble.assistant {
-    background: #111827;
-    border: 1px solid #1f2933;
-}
-.bubble.user {
-    background: #1f2937;
-    border: 1px solid #273549;
+    background: #000000;
+    border: 1px solid #2d2f34;
+    color: #f5f5f5;
 }
 
-/* input card */
+/* User messages: light grey-black */
+.bubble.user {
+    background: #1c1f24;
+    border: 1px solid #34373d;
+    color: #ffffff;
+}
+
+/* Input area */
 .input-card {
     margin-top: 1rem;
-    background: #080a0f;
+    background: #15171a;
     border-radius: 999px;
-    border: 1px solid #1f2933;
+    border: 1px solid #2b2e33;
     padding: 6px 10px 6px 14px;
 }
 
-/* text input */
+/* Text input inside */
 div[data-baseweb="input"] {
     background: transparent !important;
     border: none !important;
@@ -135,7 +140,7 @@ div[data-baseweb="input"] input {
     font-size: 0.95rem !important;
 }
 
-/* send button */
+/* Send button */
 .stButton>button {
     border-radius: 999px;
     border: 1px solid #3b82f6;
@@ -143,9 +148,10 @@ div[data-baseweb="input"] input {
     color: #ffffff;
     font-size: 0.9rem;
     padding: 0.3rem 1rem;
+    transition: 0.15s;
 }
 .stButton>button:hover {
-    filter: brightness(1.05);
+    filter: brightness(1.08);
 }
 </style>
 """,
