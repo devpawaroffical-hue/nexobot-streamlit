@@ -24,27 +24,28 @@ st.markdown(
 
     .block-container {
         padding-top: 1.2rem;
+        padding-bottom: 90px; /* space so chat doesn't hide behind bottom bar */
         max-width: 900px;
     }
 
-    /* Header like Grok */
+    /* Header like simple Grok text */
     .header-wrap {
         text-align: left;
-        margin-bottom: 1.4rem;
+        margin-bottom: 1.2rem;
         font-size: 1.4rem;
         font-weight: 600;
     }
 
     /* Chat area */
     .chat-box {
-        max-height: 500px;
+        max-height: calc(100vh - 220px);
         overflow-y: auto;
         padding: 6px 2px 10px 2px;
-        margin-bottom: 16px;
+        margin-bottom: 10px;
     }
 
     .user-bubble {
-        background: #13141a;
+        background: #14151b;
         border-radius: 999px;
         border: 1px solid #30323a;
         padding: 8px 14px;
@@ -64,7 +65,17 @@ st.markdown(
         clear: both;
     }
 
-    /* Input bar */
+    /* Bottom input bar fixed to bottom, centered */
+    .bottom-bar {
+        position: fixed;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 900px;
+        z-index: 999;
+    }
+
     .input-wrapper {
         background: #050607;
         border-radius: 999px;
@@ -83,20 +94,26 @@ st.markdown(
         outline: none !important;
     }
 
+    /* All buttons (only send button in this app) */
     .stButton>button {
         border-radius: 999px;
         border: 1px solid #3b3b3b;
-        background: #121212;
+        background: #151515;
         color: #f5f5f5;
-        padding: 6px 10px;
+        padding: 0;
+        height: 34px;
+        width: 34px;
         font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .footer-note {
         font-size: 0.75rem;
         opacity: 0.65;
         text-align: center;
-        margin-top: 0.6rem;
+        margin-top: 0.4rem;
     }
 
     .founder-tag {
@@ -104,7 +121,7 @@ st.markdown(
         opacity: 0.55;
         position: fixed;
         left: 15px;
-        bottom: 8px;
+        bottom: 4px;
     }
     </style>
     """,
@@ -122,17 +139,17 @@ You are XO AI, an assistant created by Nexo.corp.
 
 Tone:
 - Calm, clear, mature.
-- Few emojis, only when really helpful.
+- Use emojis rarely, only when they truly add value.
 - No cringe or over-excited style.
 
 Skills:
 - Study help, explanations, reasoning, tech, maths, science.
-- Simple, practical advice for life and productivity.
+- Simple, practical life and productivity advice.
 - For graphs/diagrams/images, describe them in words; optionally give short Python code or image prompts.
 
 Style:
-- Short paragraphs, bullet points when useful.
-- Be honest if you are unsure instead of making things up.
+- Short paragraphs and bullet points when helpful.
+- Be honest if unsure instead of guessing.
 """
 
 # -------------------
@@ -182,10 +199,12 @@ for msg in st.session_state.messages:
 st.markdown("</div>", unsafe_allow_html=True)
 
 # -------------------
-# INPUT AREA (Ask XO AI, send button on right)
+# BOTTOM INPUT BAR (fixed)
 # -------------------
+st.markdown('<div class="bottom-bar">', unsafe_allow_html=True)
+
 with st.form("chat-input", clear_on_submit=True):
-    cols = st.columns([0.9, 0.1])
+    cols = st.columns([0.92, 0.08])
     with cols[0]:
         st.markdown('<div class="input-wrapper">', unsafe_allow_html=True)
         user_text = st.text_input(
@@ -194,9 +213,10 @@ with st.form("chat-input", clear_on_submit=True):
             label_visibility="collapsed",
         )
         st.markdown('</div>', unsafe_allow_html=True)
-
     with cols[1]:
-        send = st.form_submit_button("➤")
+        send = st.form_submit_button("↑")
+
+st.markdown("</div>", unsafe_allow_html=True)
 
 if send and user_text.strip():
     st.session_state.messages.append({"role": "user", "content": user_text.strip()})
