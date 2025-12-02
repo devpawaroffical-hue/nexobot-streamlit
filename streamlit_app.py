@@ -23,8 +23,8 @@ You are XO AI, an advanced professional assistant created by Nexo.corp.
 
 Qualities:
 - Mature, calm, respectful.
-- Very strong at: academics, maths, coding, tech, business, psychology, productivity, daily life.
-- Emotion-aware: respond with empathy first when user is upset or stressed.
+- Very strong at: academics, maths, coding, tech, business, psychology, productivity, and daily life.
+- Emotion-aware: if user is upset or stressed, respond with empathy first.
 - Give clear, structured answers with short paragraphs and bullet points when helpful.
 - Avoid cringe or childish language.
 - Prefer accuracy and honesty over guessing. If you are not fully sure, say so clearly.
@@ -47,7 +47,7 @@ def new_chat():
 
 
 # ==============================
-# STYLES (grey-black + ChatGPT-style initials)
+# STYLES (grey-black, simple)
 # ==============================
 st.markdown(
     """
@@ -68,26 +68,6 @@ header, #MainMenu, footer {visibility: hidden;}
 .chat-title {
     font-size: 1.5rem;
     font-weight: 600;
-}
-
-/* ChatGPT-style avatar circles with initials */
-[data-testid="stChatMessageAvatar"] {
-    width: 32px !important;
-    height: 32px !important;
-    border-radius: 50% !important;
-    background: #111827 !important;
-    border: 1px solid #27303a !important;
-    color: #e5e7eb !important;
-    font-weight: 600 !important;
-    font-size: 13px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* tighten spacing */
-[data-testid="stChatMessage"] > div:nth-child(1) {
-    margin-right: 10px !important;
 }
 
 /* chat input darker */
@@ -133,14 +113,10 @@ MODEL_MAP = {
 MODEL_NAME = MODEL_MAP[model_choice]
 
 # ==============================
-# SHOW CHAT HISTORY (with initials avatars)
+# SHOW CHAT HISTORY
 # ==============================
 for msg in st.session_state.messages:
-    role = msg["role"]
-    # initials like ChatGPT
-    avatar_initial = "XO" if role == "assistant" else "U"
-
-    with st.chat_message(role, avatar=avatar_initial):
+    with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
 # ==============================
@@ -149,13 +125,13 @@ for msg in st.session_state.messages:
 user_text = st.chat_input("Ask XO AI anything...")
 
 if user_text:
-    # store + show user message
+    # store user message
     st.session_state.messages.append({"role": "user", "content": user_text})
-    with st.chat_message("user", avatar="U"):
+    with st.chat_message("user"):
         st.markdown(user_text)
 
-    # model call
-    with st.chat_message("assistant", avatar="XO"):
+    # call Groq
+    with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             response = client.chat.completions.create(
                 model=MODEL_NAME,
@@ -165,11 +141,11 @@ if user_text:
             reply = response.choices[0].message.content
             st.markdown(reply)
 
-    # save assistant reply
+    # save reply
     st.session_state.messages.append({"role": "assistant", "content": reply})
 
 # ==============================
-# FOOTER (simple)
+# FOOTER
 # ==============================
 st.markdown("---")
 st.caption("By using XO AI, you agree to basic Terms and Privacy practices.")
