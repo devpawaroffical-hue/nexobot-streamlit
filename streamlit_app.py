@@ -86,7 +86,7 @@ st.markdown(
 # IMPORTANT: Set this in Streamlit secrets as GROQ_API_KEY
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-MODEL_NAME = "llama-3.1-70b-versatile"  # change if you use another model
+MODEL_NAME = "llama-3.1-8b-instant"  # change if you use another model
 
 SYSTEM_PROMPT = """
 You are XO AI, an advanced assistant created by Nexo.corp.
