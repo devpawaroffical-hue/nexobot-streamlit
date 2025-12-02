@@ -1,6 +1,8 @@
 import streamlit as st
 from groq import Groq
 import html
+import json
+import streamlit.components.v1 as components
 
 # -----------------------------
 # PAGE CONFIG
@@ -40,15 +42,19 @@ if "messages" not in st.session_state:
         {"role": "assistant", "content": "Hello, I’m XO AI. How can I help you today?"}
     ]
 
+# store like/dislike state: {index: "like"/"dislike"}
+if "feedback" not in st.session_state:
+    st.session_state.feedback = {}
+
 
 def new_chat():
     st.session_state.messages = [
         {"role": "assistant", "content": "New chat started. What can XO do for you?"}
     ]
-
+    st.session_state.feedback = {}
 
 # -----------------------------
-# STYLES (grey-black + side panels + actions)
+# STYLES (grey-black + side panels)
 # -----------------------------
 st.markdown(
     """
@@ -74,7 +80,7 @@ header, #MainMenu, footer {visibility: hidden;}
     font-weight: 600;
 }
 
-/* Side card style (minimal + slight purple vibe) */
+/* Side card style */
 .side-card {
     background: #15171a;
     border-radius: 14px;
@@ -123,46 +129,43 @@ header, #MainMenu, footer {visibility: hidden;}
     line-height: 1.4;
     word-wrap: break-word;
 }
-/* Assistant: pure black bubble */
 .bubble.assistant {
     background: #000000;
     border: 1px solid #303238;
     color: #f5f5f5;
 }
-/* User: soft grey-black bubble */
 .bubble.user {
     background: #1c1f24;
     border: 1px solid #34373d;
     color: #ffffff;
 }
 
-/* Action row under assistant messages */
-.msg-actions {
+/* Small buttons row */
+.feedback-row {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
+    gap: 6px;
     margin-top: 4px;
-    font-size: 0.78rem;
-    color: #9ca3af;
-}
-.msg-actions span {
-    cursor: pointer;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: transparent;
-    border: 1px solid transparent;
-    transition: 0.15s;
-}
-.msg-actions span:hover {
-    background: #20222a;
 }
 
-/* Active like/dislike states */
-.msg-actions .like-btn.active {
+/* Make feedback buttons smaller than main Send */
+.feedback-row .stButton>button {
+    padding: 0.12rem 0.55rem;
+    font-size: 0.7rem;
+    border-radius: 999px;
+    border: 1px solid #3b3b3b;
+    background: #1f2127;
+}
+.feedback-row .stButton>button:hover {
+    filter: brightness(1.1);
+}
+
+/* Active state hint via color */
+.feedback-liked .stButton>button:nth-child(1) {
     border-color: #22c55e;
     color: #22c55e;
 }
-.msg-actions .dislike-btn.active {
+.feedback-disliked .stButton>button:nth-child(2) {
     border-color: #f97373;
     color: #f97373;
 }
@@ -191,7 +194,7 @@ div[data-baseweb="input"] input {
     font-size: 0.95rem !important;
 }
 
-/* Send button */
+/* Main Send button */
 .stButton>button {
     border-radius: 999px;
     border: 1px solid #6366f1;
@@ -222,7 +225,7 @@ with top_right:
 st.divider()
 
 # -----------------------------
-# MODEL SELECTOR (full width)
+# MODEL SELECTOR
 # -----------------------------
 model_choice = st.selectbox(
     "Choose free Groq model:",
@@ -287,7 +290,6 @@ with right_col:
 with chat_col:
     st.markdown('<div class="chat-panel">', unsafe_allow_html=True)
 
-    # helper to escape message text for HTML
     def format_msg(text: str) -> str:
         return html.escape(text).replace("\n", "<br>")
 
@@ -296,7 +298,7 @@ with chat_col:
         cls = "user" if role == "user" else "assistant"
         safe_text = format_msg(msg["content"])
 
-        # bubble
+        # message bubble
         st.markdown(
             f"""
             <div class="msg-row {cls}">
@@ -308,62 +310,47 @@ with chat_col:
             unsafe_allow_html=True,
         )
 
-        # actions only for assistant messages
+        # assistant feedback buttons
         if role == "assistant":
-            # data-text for JS copy
-            data_text = html.escape(msg["content"]).replace("\n", "\\n")
-            st.markdown(
-                f"""
-                <div class="msg-row {cls}">
-                    <div class="msg-actions">
-                        <span class="like-btn" data-id="{idx}">👍 Like</span>
-                        <span class="dislike-btn" data-id="{idx}">👎 Dislike</span>
-                        <span class="copy-btn" data-text="{data_text}">📋 Copy</span>
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            fb_state = st.session_state.feedback.get(idx)  # None / "like" / "dislike"
+
+            # feedback buttons row
+            fb_class = ""
+            if fb_state == "like":
+                fb_class = "feedback-row feedback-liked"
+            elif fb_state == "dislike":
+                fb_class = "feedback-row feedback-disliked"
+            else:
+                fb_class = "feedback-row"
+
+            st.markdown(f'<div class="{fb_class}">', unsafe_allow_html=True)
+            col_like, col_dislike, col_copy = st.columns(3)
+
+            with col_like:
+                if st.button("👍 Like", key=f"like_{idx}"):
+                    st.session_state.feedback[idx] = "like"
+
+            with col_dislike:
+                if st.button("👎 Dislike", key=f"dislike_{idx}"):
+                    st.session_state.feedback[idx] = "dislike"
+
+            with col_copy:
+                if st.button("📋 Copy", key=f"copy_{idx}"):
+                    # Use JS via a tiny HTML component to copy to clipboard
+                    components.html(
+                        f"""
+                        <script>
+                        navigator.clipboard.writeText({json.dumps(msg["content"])});
+                        </script>
+                        """,
+                        height=0,
+                        width=0,
+                    )
+                    st.toast("Copied to clipboard ✅")
+
+            st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
-
-    # JS for like/dislike/copy
-    st.markdown(
-        """
-        <script>
-        // Copy button
-        document.querySelectorAll('.copy-btn').forEach(function(btn) {
-            btn.onclick = function() {
-                const text = this.getAttribute('data-text').replace(/\\n/g, "\\n");
-                navigator.clipboard.writeText(text).then(() => {
-                    const old = this.innerText;
-                    this.innerText = '✅ Copied';
-                    setTimeout(() => { this.innerText = old; }, 1200);
-                });
-            };
-        });
-
-        // Like buttons
-        document.querySelectorAll('.like-btn').forEach(function(btn) {
-            btn.onclick = function() {
-                this.classList.toggle('active');
-                const sib = this.parentElement.querySelector('.dislike-btn');
-                if (sib) sib.classList.remove('active');
-            };
-        });
-
-        // Dislike buttons
-        document.querySelectorAll('.dislike-btn').forEach(function(btn) {
-            btn.onclick = function() {
-                this.classList.toggle('active');
-                const sib = this.parentElement.querySelector('.like-btn');
-                if (sib) sib.classList.remove('active');
-            };
-        });
-        </script>
-        """,
-        unsafe_allow_html=True,
-    )
 
     # -------------------------
     # INPUT AREA (CENTER)
