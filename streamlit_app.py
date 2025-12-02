@@ -42,16 +42,12 @@ if "messages" not in st.session_state:
         {"role": "assistant", "content": "Hello, I’m XO AI. How can I help you today?"}
     ]
 
-# store like/dislike state: {index: "like"/"dislike"}
-if "feedback" not in st.session_state:
-    st.session_state.feedback = {}
-
 
 def new_chat():
     st.session_state.messages = [
         {"role": "assistant", "content": "New chat started. What can XO do for you?"}
     ]
-    st.session_state.feedback = {}
+
 
 # -----------------------------
 # STYLES (grey-black + side panels)
@@ -140,34 +136,26 @@ header, #MainMenu, footer {visibility: hidden;}
     color: #ffffff;
 }
 
-/* Small buttons row */
-.feedback-row {
+/* Copy button container */
+.copy-container {
     display: flex;
     justify-content: flex-end;
-    gap: 6px;
-    margin-top: 4px;
+    margin-top: 3px;
 }
 
-/* Make feedback buttons smaller than main Send */
-.feedback-row .stButton>button {
-    padding: 0.12rem 0.55rem;
+/* Make the copy button small & subtle */
+.copy-btn {
     font-size: 0.7rem;
+    padding: 2px 10px;
+    background: transparent;
     border-radius: 999px;
-    border: 1px solid #3b3b3b;
-    background: #1f2127;
+    border: 1px solid #333336;
+    color: #a1a1a1;
+    cursor: pointer;
 }
-.feedback-row .stButton>button:hover {
-    filter: brightness(1.1);
-}
-
-/* Active state hint via color */
-.feedback-liked .stButton>button:nth-child(1) {
-    border-color: #22c55e;
-    color: #22c55e;
-}
-.feedback-disliked .stButton>button:nth-child(2) {
-    border-color: #f97373;
-    color: #f97373;
+.copy-btn:hover {
+    background: #1f2124;
+    color: #ffffff;
 }
 
 /* Input area */
@@ -310,45 +298,45 @@ with chat_col:
             unsafe_allow_html=True,
         )
 
-        # assistant feedback buttons
+        # only assistant messages get copy button
         if role == "assistant":
-            fb_state = st.session_state.feedback.get(idx)  # None / "like" / "dislike"
-
-            # feedback buttons row
-            fb_class = ""
-            if fb_state == "like":
-                fb_class = "feedback-row feedback-liked"
-            elif fb_state == "dislike":
-                fb_class = "feedback-row feedback-disliked"
-            else:
-                fb_class = "feedback-row"
-
-            st.markdown(f'<div class="{fb_class}">', unsafe_allow_html=True)
-            col_like, col_dislike, col_copy = st.columns(3)
-
-            with col_like:
-                if st.button("👍 Like", key=f"like_{idx}"):
-                    st.session_state.feedback[idx] = "like"
-
-            with col_dislike:
-                if st.button("👎 Dislike", key=f"dislike_{idx}"):
-                    st.session_state.feedback[idx] = "dislike"
-
-            with col_copy:
-                if st.button("📋 Copy", key=f"copy_{idx}"):
-                    # Use JS via a tiny HTML component to copy to clipboard
-                    components.html(
-                        f"""
-                        <script>
-                        navigator.clipboard.writeText({json.dumps(msg["content"])});
-                        </script>
-                        """,
-                        height=0,
-                        width=0,
-                    )
-                    st.toast("Copied to clipboard ✅")
-
-            st.markdown("</div>", unsafe_allow_html=True)
+            # render a small custom HTML button using components (so JS works reliably)
+            components.html(
+                f"""
+                <html>
+                <body>
+                    <div class="copy-container">
+                        <button class="copy-btn" onclick="
+                            navigator.clipboard.writeText({json.dumps(msg['content'])});
+                            this.innerText='Copied ✔';
+                            setTimeout(() => this.innerText='📋 Copy', 1200);
+                        ">📋 Copy</button>
+                    </div>
+                </body>
+                <style>
+                    .copy-container {{
+                        display: flex;
+                        justify-content: flex-end;
+                        margin-top: 3px;
+                    }}
+                    .copy-btn {{
+                        font-size: 0.7rem;
+                        padding: 2px 10px;
+                        background: transparent;
+                        border-radius: 999px;
+                        border: 1px solid #333336;
+                        color: #a1a1a1;
+                        cursor: pointer;
+                    }}
+                    .copy-btn:hover {{
+                        background: #1f2124;
+                        color: #ffffff;
+                    }}
+                </style>
+                </html>
+                """,
+                height=32,
+            )
 
     st.markdown("</div>", unsafe_allow_html=True)
 
