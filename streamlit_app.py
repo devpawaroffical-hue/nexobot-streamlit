@@ -213,7 +213,7 @@ div[data-baseweb="input"] input {
 # -----------------------------
 top_left, top_right = st.columns([0.7, 0.3])
 with top_left:
-    st.markdown('<div class="chat-title">XO AI (Free)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="chat-title">XO AI — CLEAN TEST</div>', unsafe_allow_html=True)
 with top_right:
     if st.button("New chat"):
         new_chat()
