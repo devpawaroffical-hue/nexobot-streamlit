@@ -15,7 +15,6 @@ st.set_page_config(
 # -----------------------------
 # GROQ CLIENT
 # -----------------------------
-# Make sure GROQ_API_KEY is set in Streamlit secrets
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 DEFAULT_MODEL = "llama-3.1-8b-instant"
 
@@ -36,22 +35,27 @@ You are XO AI, a calm, professional and intelligent assistant created by Nexo.co
 # -----------------------------
 # SESSION STATE
 # -----------------------------
-if "messages" not in st.session_state:
-    # store only role + content (timestamps separate)
+# messages: list of {role, content, time}
+if "messages" not in st.session_state or not isinstance(st.session_state.messages, list):
     st.session_state.messages = []
-if "times" not in st.session_state:
-    st.session_state.times = []  # parallel list of timestamps
+
+# if old "times" exists from previous version, ignore it
+if "times" in st.session_state:
+    del st.session_state["times"]
 
 
 def add_message(role: str, content: str):
-    """Add a chat message with current time."""
-    st.session_state.messages.append({"role": role, "content": content})
-    st.session_state.times.append(datetime.now().strftime("%I:%M %p"))
+    st.session_state.messages.append(
+        {
+            "role": role,
+            "content": content,
+            "time": datetime.now().strftime("%I:%M %p"),
+        }
+    )
 
 
 def reset_chat():
     st.session_state.messages = []
-    st.session_state.times = []
 
 
 # -----------------------------
@@ -179,7 +183,7 @@ with h1_right:
 st.write("---")
 
 # -----------------------------
-# MODEL DROPDOWN (optional)
+# MODEL DROPDOWN
 # -----------------------------
 model_choice = st.selectbox(
     "Groq model:",
@@ -204,11 +208,11 @@ st.markdown("<div class='chat-window'>", unsafe_allow_html=True)
 def safe(text: str) -> str:
     return html.escape(text).replace("\n", "<br>")
 
-for idx, msg in enumerate(st.session_state.messages):
+for msg in st.session_state.messages:
     role = msg["role"]
     cls = "user" if role == "user" else "assistant"
     text = safe(msg["content"])
-    time_str = st.session_state.times[idx]
+    time_str = msg.get("time", "")
 
     st.markdown(
         f"""
@@ -248,9 +252,11 @@ if send and user_text.strip():
     add_message("user", user_text)
 
     with st.spinner("XO is thinking..."):
-        # build history for Groq (only role + content)
         history = [{"role": "system", "content": SYSTEM_PROMPT}]
-        history.extend(st.session_state.messages)
+        history.extend(
+            {"role": m["role"], "content": m["content"]}
+            for m in st.session_state.messages
+        )
 
         response = client.chat.completions.create(
             model=model_name,
