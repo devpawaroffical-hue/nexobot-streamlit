@@ -5,23 +5,23 @@ import html
 import json
 import streamlit.components.v1 as components
 
-# -----------------------------------------------------------
+# -----------------------------
 # PAGE CONFIG
-# -----------------------------------------------------------
+# -----------------------------
 st.set_page_config(
     page_title="XO AI — Free Version",
     page_icon="🤖",
     layout="wide",
 )
 
-# -----------------------------------------------------------
+# -----------------------------
 # GROQ CLIENT
-# -----------------------------------------------------------
+# -----------------------------
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-# -----------------------------------------------------------
+# -----------------------------
 # SYSTEM PROMPT
-# -----------------------------------------------------------
+# -----------------------------
 SYSTEM_PROMPT = """
 You are XO AI, a professional, calm, intelligent assistant created by Nexo.corp.
 
@@ -34,9 +34,9 @@ Rules:
 - If unsure, admit uncertainty politely.
 """
 
-# -----------------------------------------------------------
+# -----------------------------
 # SESSION
-# -----------------------------------------------------------
+# -----------------------------
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {
@@ -55,9 +55,9 @@ def add_message(role, content):
     })
 
 
-# -----------------------------------------------------------
-# STYLE — SUPER CLEAN
-# -----------------------------------------------------------
+# -----------------------------
+# STYLES — CLEAN CENTER CHAT
+# -----------------------------
 st.markdown("""
 <style>
 body, .stApp {
@@ -79,7 +79,7 @@ header, #MainMenu, footer {visibility: hidden;}
     font-weight: 600;
 }
 
-/* Chat Panel */
+/* Chat window */
 .chat-window {
     background: #15171a;
     border: 1px solid #2d2f33;
@@ -90,12 +90,11 @@ header, #MainMenu, footer {visibility: hidden;}
     margin-top: 1rem;
 }
 
-/* Message bubbles */
+/* Messages */
 .msg-row {
     display: flex;
     margin-bottom: 12px;
 }
-
 .msg-row.user { justify-content: flex-end; }
 .msg-row.assistant { justify-content: flex-start; }
 
@@ -106,18 +105,16 @@ header, #MainMenu, footer {visibility: hidden;}
     font-size: 0.95rem;
     line-height: 1.4;
 }
-
 .bubble.assistant {
     background: #000000;
     border: 1px solid #303238;
 }
-
 .bubble.user {
     background: #1c1f24;
     border: 1px solid #3a3d42;
 }
 
-/* Timestamp */
+/* Time */
 .time {
     font-size: 0.7rem;
     color: #9ca3af;
@@ -131,7 +128,6 @@ header, #MainMenu, footer {visibility: hidden;}
     justify-content: flex-end;
     margin-top: 2px;
 }
-
 .copy-row .stButton button {
     font-size: 0.7rem;
     padding: 2px 10px;
@@ -145,7 +141,7 @@ header, #MainMenu, footer {visibility: hidden;}
     color: white;
 }
 
-/* Input bar */
+/* Input box */
 .input-box {
     background: #15171a;
     border: 1px solid #2b2e33;
@@ -165,9 +161,9 @@ header, #MainMenu, footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------------------------------------
+# -----------------------------
 # HEADER
-# -----------------------------------------------------------
+# -----------------------------
 col1, col2 = st.columns([0.7, 0.3])
 with col1:
     st.markdown("<div class='title'>XO AI (Free)</div>", unsafe_allow_html=True)
@@ -182,9 +178,9 @@ with col2:
 
 st.write("---")
 
-# -----------------------------------------------------------
+# -----------------------------
 # MODEL SELECT
-# -----------------------------------------------------------
+# -----------------------------
 model_choice = st.selectbox("Choose free Groq model:", [
     "LLaMA-3.1-8B (fast & smart)",
     "Mixtral-8x7B (strong reasoning)",
@@ -196,16 +192,15 @@ MODEL_MAP = {
     "Mixtral-8x7B (strong reasoning)": "mixtral-8x7b-32768",
     "Gemma-2-9B (clean tone)": "gemma2-9b-it",
 }
-
 MODEL_NAME = MODEL_MAP[model_choice]
 
-# -----------------------------------------------------------
+# -----------------------------
 # CHAT WINDOW
-# -----------------------------------------------------------
+# -----------------------------
 st.markdown("<div class='chat-window'>", unsafe_allow_html=True)
 
 def safe_html(text):
-    return html.escape(text).replace("\n", "<br>")
+    return html.escape(text).replace("\\n", "<br>")
 
 for i, msg in enumerate(st.session_state.messages):
     role = msg["role"]
@@ -225,14 +220,13 @@ for i, msg in enumerate(st.session_state.messages):
         unsafe_allow_html=True
     )
 
-    # Copy button only for assistant
     if role == "assistant":
         st.markdown("<div class='copy-row'>", unsafe_allow_html=True)
         if st.button("📋 Copy", key=f"copy_{i}"):
             components.html(
                 f"""
                 <script>
-                    navigator.clipboard.writeText({json.dumps(msg["content"])});
+                    navigator.clipboard.writeText({json.dumps(msg["content"])}); 
                 </script>
                 """,
                 height=0, width=0
@@ -242,21 +236,21 @@ for i, msg in enumerate(st.session_state.messages):
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# -----------------------------------------------------------
-# INPUT AREA
-# -----------------------------------------------------------
+# -----------------------------
+# INPUT
+# -----------------------------
 st.markdown("<div class='input-box'>", unsafe_allow_html=True)
 with st.form("input", clear_on_submit=True):
     c1, c2 = st.columns([0.85, 0.15])
     with c1:
-        user_text = st.text_input("", placeholder="Ask XO AI anything...")
+        user_text = st.text_input("Message", placeholder="Ask XO AI anything...")
     with c2:
         send = st.form_submit_button("Send")
 st.markdown("</div>", unsafe_allow_html=True)
 
-# -----------------------------------------------------------
-# HANDLE SEND
-# -----------------------------------------------------------
+# -----------------------------
+# SEND HANDLER
+# -----------------------------
 if send and user_text.strip():
     text = user_text.strip()
     add_message("user", text)
@@ -264,7 +258,8 @@ if send and user_text.strip():
     with st.spinner("XO is thinking..."):
         reply = client.chat.completions.create(
             model=MODEL_NAME,
-            messages=[{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.messages
+            messages=[{"role": "system", "content": SYSTEM_PROMPT}]
+            + st.session_state.messages
         ).choices[0].message.content
 
     add_message("assistant", reply)
