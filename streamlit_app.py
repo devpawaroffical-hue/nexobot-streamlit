@@ -5,7 +5,8 @@ import streamlit as st
 from groq import Groq
 
 
-# --- Page config ---
+# ---------- PAGE CONFIG ----------
+
 st.set_page_config(
     page_title="XO AI — Nexo.corp",
     page_icon="🤖",
@@ -13,7 +14,8 @@ st.set_page_config(
 )
 
 
-# --- Mini CSS for dark theme, fade-up animation, hover effects ---
+# ---------- CSS (DARK THEME + ANIMATIONS + CHAT STYLE) ----------
+
 CUSTOM_CSS = """
 <style>
     /* Global dark theme */
@@ -22,12 +24,12 @@ CUSTOM_CSS = """
         color: #f5f5f5 !important;
     }
 
-    /* Hide default Streamlit header */
+    /* Remove default Streamlit header */
     header[data-testid="stHeader"] {
         background: transparent;
     }
 
-    /* Hide default chat avatars (the round faces) */
+    /* Remove default chat avatars (faces) */
     [data-testid="stChatMessageAvatar"] {
         display: none !important;
     }
@@ -99,7 +101,7 @@ CUSTOM_CSS = """
         opacity: 0.8;
     }
 
-    /* Chat container */
+    /* Chat container card */
     .xo-chat-card {
         padding: 0.75rem 0.9rem;
         border-radius: 1.25rem;
@@ -108,7 +110,7 @@ CUSTOM_CSS = """
         box-shadow: 0 18px 55px rgba(15, 23, 42, 0.9);
     }
 
-    /* Quick modes card */
+    /* Right-side modes card */
     .xo-modes-card {
         padding: 0.75rem 0.9rem 0.9rem 0.9rem;
         border-radius: 1.25rem;
@@ -155,10 +157,10 @@ CUSTOM_CSS = """
         color: #9ca3af;
     }
 
-    /* Chat message tweaks */
+    /* Chat bubble tweaks */
     [data-testid="stChatMessage"] {
         border-radius: 1rem;
-        padding: 0.6rem 0.8rem;
+        padding: 0.4rem 0.7rem;
         margin-bottom: 0.35rem;
         backdrop-filter: blur(10px);
     }
@@ -171,14 +173,16 @@ CUSTOM_CSS = """
     [data-testid="stChatMessage-User"] {
         background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.4), rgba(15, 23, 42, 0.95));
         border: 1px solid rgba(59, 130, 246, 0.9);
+        margin-left: 15%;
     }
 
     [data-testid="stChatMessage-Assistant"] {
         background: rgba(15, 23, 42, 0.96);
         border: 1px solid rgba(75, 85, 99, 0.85);
+        margin-right: 15%;
     }
 
-    /* Chat input */
+    /* Chat input bar */
     .stChatInputContainer {
         border-radius: 999px !important;
         border: 1px solid rgba(55, 65, 81, 0.85) !important;
@@ -193,10 +197,6 @@ CUSTOM_CSS = """
         font-size: 0.75rem;
         color: #6b7280;
         text-align: center;
-        opacity: 0.9;
-    }
-
-    .xo-footer span {
         opacity: 0.9;
     }
 
@@ -217,7 +217,7 @@ CUSTOM_CSS = """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 
-# --- Modes & model mapping ---
+# ---------- MODES & MODEL MAPPING ----------
 
 MODES = [
     "Study Helper",
@@ -226,24 +226,21 @@ MODES = [
     "Friendly Chat",
 ]
 
-# Map UI labels to current Groq model IDs
+# UI labels (old names) -> real Groq model IDs
 MODEL_ID_MAP = {
-    "mixtral-8x7b-32768": "mistral-saba-24b",        # replacement for Mixtral 8x7B
-    "llama3-70b-8192": "llama-3.3-70b-versatile",   # replacement for Llama3 70B
+    "llama3-8b-8192": "llama-3.1-8b-instant",     # fast/cheap model
+    "llama3-70b-8192": "llama-3.3-70b-versatile"  # bigger, smarter model
 }
 
 
 def init_session_state() -> None:
-    """Initialize Streamlit session state variables."""
     if "messages" not in st.session_state:
         st.session_state.messages: List[Dict[str, str]] = []
-
     if "selected_mode" not in st.session_state:
         st.session_state.selected_mode = "Friendly Chat"
 
 
 def get_mode_instructions(mode: str) -> str:
-    """Return mode-specific guidance for the system prompt."""
     base_rules = (
         "You are XO AI, the official assistant of Nexo.corp. "
         "Your tone is calm, clear, and respectful. "
@@ -257,14 +254,14 @@ def get_mode_instructions(mode: str) -> str:
     if mode == "Study Helper":
         mode_text = (
             "Act as a friendly Study Helper. "
-            "Break problems into clear steps and show reasoning in a simple way. "
+            "Break problems into clear steps and show reasoning simply. "
             "Encourage the student but do not do full homework or full exam papers for them."
         )
     elif mode == "Idea Generator":
         mode_text = (
             "Act as a creative Idea Generator. "
             "Brainstorm ideas for content, projects, startups, and goals. "
-            "Be practical and realistic, and include examples."
+            "Be practical and realistic, with examples."
         )
     elif mode == "Planner":
         mode_text = (
@@ -282,7 +279,6 @@ def get_mode_instructions(mode: str) -> str:
 
 
 def build_messages(user_input: str) -> List[Dict[str, str]]:
-    """Build message list for Groq ChatCompletion."""
     system_prompt = get_mode_instructions(st.session_state.selected_mode)
 
     messages: List[Dict[str, str]] = [
@@ -297,10 +293,11 @@ def build_messages(user_input: str) -> List[Dict[str, str]]:
 
 
 def call_groq_chat(messages: List[Dict[str, str]], ui_model_name: str) -> str:
-    """Call Groq ChatCompletions and return text.
+    """
+    Call Groq ChatCompletions and return assistant reply.
 
-    ui_model_name is the label selected in the UI, which we
-    map to a real Groq model ID via MODEL_ID_MAP.
+    ui_model_name is the label from the UI (e.g. "llama3-70b-8192"),
+    mapped to a real Groq model ID via MODEL_ID_MAP.
     """
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
@@ -311,7 +308,6 @@ def call_groq_chat(messages: List[Dict[str, str]], ui_model_name: str) -> str:
     # Required Groq client usage
     client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
-    # Map UI model to real Groq id (handles deprecations)
     groq_model_id = MODEL_ID_MAP.get(ui_model_name, ui_model_name)
 
     completion = client.chat.completions.create(
@@ -324,11 +320,9 @@ def call_groq_chat(messages: List[Dict[str, str]], ui_model_name: str) -> str:
     return completion.choices[0].message.content.strip()
 
 
-# --- UI sections ---
-
+# ---------- UI SECTIONS ----------
 
 def render_hero() -> None:
-    """Top hero section with status pill."""
     st.markdown(
         """
         <div class="xo-hero">
@@ -351,11 +345,10 @@ def render_hero() -> None:
 
 
 def render_modes_sidebar() -> None:
-    """Right side quick modes + XO identity."""
     st.markdown("<div class='xo-modes-card'>", unsafe_allow_html=True)
     st.markdown("<div class='xo-modes-title'>Quick modes</div>", unsafe_allow_html=True)
 
-    # Use radio for clean mode selection
+    # clean mode selector
     selected = st.radio(
         "",
         MODES,
@@ -364,19 +357,18 @@ def render_modes_sidebar() -> None:
     )
     st.session_state.selected_mode = selected
 
-    # Mode descriptions
     descriptions = {
         "Study Helper": "Break down concepts and questions step-by-step.",
         "Idea Generator": "Brainstorm content, project, and business ideas.",
         "Planner": "Design routines, timetables, and simple roadmaps.",
         "Friendly Chat": "Normal conversation, mindset, and life chat.",
     }
+
     st.markdown(
         f"<div class='xo-mode-caption'>{descriptions.get(selected, '')}</div>",
         unsafe_allow_html=True,
     )
 
-    # XO AI identity box
     st.markdown(
         """
         <div class="xo-identity-box">
@@ -398,7 +390,6 @@ def render_modes_sidebar() -> None:
 
 
 def render_chat_area(selected_model: str) -> None:
-    """Left-hand chat area with history and input."""
     st.markdown("<div class='xo-chat-card'>", unsafe_allow_html=True)
 
     mode = st.session_state.selected_mode
@@ -408,12 +399,12 @@ def render_chat_area(selected_model: str) -> None:
         unsafe_allow_html=True,
     )
 
-    # History
+    # history
     for msg in st.session_state.messages:
         with st.chat_message("user" if msg["role"] == "user" else "assistant"):
             st.markdown(msg["content"])
 
-    # Input
+    # input
     user_input = st.chat_input("Ask XO AI anything…")
 
     if user_input:
@@ -428,10 +419,9 @@ def render_chat_area(selected_model: str) -> None:
                     messages = build_messages(user_input)
                     assistant_reply = call_groq_chat(messages, selected_model)
                 except RuntimeError as e:
-                    # Config / API key errors – show clearly
                     st.error(str(e))
                     return
-                except Exception as e:  # Groq / network / rate-limit errors
+                except Exception as e:
                     st.error("XO AI hit a limit. Please try again in a moment.")
                     st.caption(f"Debug info: {e}")
                     return
@@ -445,23 +435,21 @@ def render_chat_area(selected_model: str) -> None:
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-# --- Main ---
-
+# ---------- MAIN ----------
 
 def main() -> None:
     init_session_state()
 
     render_hero()
-
     st.markdown("\n", unsafe_allow_html=True)
 
-    # Model selector (UI labels, mapped internally)
+    # New model selection (no Mixtral; 8B + 70B llama)
     with st.expander("Model settings", expanded=False):
         selected_model = st.radio(
             "Choose Groq model",
-            options=["mixtral-8x7b-32768", "llama3-70b-8192"],
+            options=["llama3-8b-8192", "llama3-70b-8192"],
             index=1,
-            help="These models are served by Groq and used by XO AI.",
+            help="These are Groq Llama models used by XO AI.",
             horizontal=True,
         )
 
@@ -485,4 +473,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 
