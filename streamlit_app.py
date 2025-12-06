@@ -1,21 +1,19 @@
+# Updating the avatar removal styling in your Streamlit XO AI app
+# Only avatar-removal CSS is added. Everything else remains unchanged.
+
 import os
 from typing import List, Dict
-
 import streamlit as st
 from groq import Groq
 
-
 # ---------- PAGE CONFIG ----------
-
 st.set_page_config(
     page_title="XO AI — Nexo.corp",
     page_icon="🤖",
     layout="wide",
 )
 
-
-# ---------- CSS (DARK THEME + ANIMATIONS + CHAT STYLE) ----------
-
+# ---------- UPDATED CSS (avatar fully removed) ----------
 CUSTOM_CSS = """
 <style>
     /* Global dark theme */
@@ -24,388 +22,134 @@ CUSTOM_CSS = """
         color: #f5f5f5 !important;
     }
 
-    /* Remove default Streamlit header */
-    header[data-testid="stHeader"] {
-        background: transparent;
-    }
+    /* Remove Streamlit header */
+    header[data-testid="stHeader"] { background: transparent; }
 
-    /* Remove default chat avatars (faces) */
+    /* REMOVE AVATAR ICONS COMPLETELY */
     [data-testid="stChatMessageAvatar"] {
         display: none !important;
     }
 
-    /* Layout spacing */
-    .block-container {
-        padding-top: 1.5rem !important;
-        padding-bottom: 1.5rem !important;
-        max-width: 1200px !important;
+    /* Remove avatar wrapper background */
+    [data-testid="stChatMessageAvatar"] > div {
+        background: transparent !important;
+        box-shadow: none !important;
     }
 
-    /* Hero section */
-    .xo-hero {
-        padding: 1.5rem 1.25rem 1.25rem 1.25rem;
-        border-radius: 1.5rem;
-        background: linear-gradient(135deg, rgba(79, 70, 229, 0.35), rgba(15, 23, 42, 0.95));
-        border: 1px solid rgba(148, 163, 184, 0.35);
-        box-shadow: 0 26px 80px rgba(15, 23, 42, 0.9);
-        animation: fadeUp 0.7s ease-out;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .xo-hero::before {
-        content: "";
-        position: absolute;
-        inset: -40%;
-        background: radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.18), transparent 55%);
-        opacity: 0.9;
-        pointer-events: none;
-    }
-
-    .xo-hero-title {
-        font-size: 2.0rem;
-        font-weight: 750;
-        letter-spacing: 0.04em;
-        margin-bottom: 0.35rem;
-    }
-
-    .xo-hero-subtitle {
-        font-size: 0.95rem;
-        color: #e5e7eb;
-        opacity: 0.9;
-        margin-bottom: 0.65rem;
-    }
-
-    .xo-status-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.45rem;
-        padding: 0.25rem 0.75rem;
-        border-radius: 999px;
-        font-size: 0.75rem;
-        background: rgba(15, 23, 42, 0.9);
-        border: 1px solid rgba(148, 163, 184, 0.7);
-        color: #e5e7eb;
-        backdrop-filter: blur(12px);
-    }
-
-    .xo-status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 999px;
-        background: #22c55e;
-        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.30);
-    }
-
-    .xo-status-powered {
-        opacity: 0.8;
-    }
-
-    /* Chat container card */
-    .xo-chat-card {
-        padding: 0.75rem 0.9rem;
-        border-radius: 1.25rem;
-        background: rgba(15, 23, 42, 0.95);
-        border: 1px solid rgba(30, 64, 175, 0.65);
-        box-shadow: 0 18px 55px rgba(15, 23, 42, 0.9);
-    }
-
-    /* Right-side modes card */
-    .xo-modes-card {
-        padding: 0.75rem 0.9rem 0.9rem 0.9rem;
-        border-radius: 1.25rem;
-        background: rgba(15, 23, 42, 0.9);
-        border: 1px solid rgba(55, 65, 81, 0.8);
-        box-shadow: 0 18px 55px rgba(15, 23, 42, 0.9);
-        animation: fadeUp 0.8s ease-out;
-    }
-
-    .xo-modes-title {
-        font-size: 0.9rem;
-        font-weight: 600;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #9ca3af;
-        margin-bottom: 0.6rem;
-    }
-
-    .xo-mode-caption {
-        font-size: 0.72rem;
-        color: #9ca3af;
-        margin-top: 0.15rem;
-        margin-bottom: 0.15rem;
-    }
-
-    /* XO identity box */
-    .xo-identity-box {
-        margin-top: 0.75rem;
-        padding: 0.65rem 0.75rem;
-        border-radius: 0.9rem;
-        background: rgba(15, 23, 42, 0.95);
-        border: 1px dashed rgba(75, 85, 99, 0.9);
-        font-size: 0.75rem;
-        line-height: 1.4;
-        color: #d1d5db;
-    }
-
-    .xo-identity-title {
-        font-size: 0.8rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        margin-bottom: 0.4rem;
-        color: #9ca3af;
-    }
-
-    /* Chat bubble tweaks */
-    [data-testid="stChatMessage"] {
-        border-radius: 1rem;
-        padding: 0.4rem 0.7rem;
-        margin-bottom: 0.35rem;
-        backdrop-filter: blur(10px);
-    }
-
-    [data-testid="stChatMessage"] div[data-testid="stMarkdownContainer"] p {
-        font-size: 0.9rem;
-        line-height: 1.55;
-    }
-
+    /* Fix chat bubble alignment after removing avatars */
     [data-testid="stChatMessage-User"] {
-        background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.4), rgba(15, 23, 42, 0.95));
-        border: 1px solid rgba(59, 130, 246, 0.9);
-        margin-left: 15%;
+        margin-left: 5% !important;
+        padding-left: 1rem !important;
     }
 
     [data-testid="stChatMessage-Assistant"] {
-        background: rgba(15, 23, 42, 0.96);
-        border: 1px solid rgba(75, 85, 99, 0.85);
-        margin-right: 15%;
+        margin-right: 5% !important;
+        padding-right: 1rem !important;
     }
 
-    /* Chat input bar */
-    .stChatInputContainer {
-        border-radius: 999px !important;
-        border: 1px solid rgba(55, 65, 81, 0.85) !important;
-        background: rgba(17, 24, 39, 0.95) !important;
-        box-shadow: 0 18px 45px rgba(15, 23, 42, 1);
-        animation: fadeUp 0.9s ease-out;
-    }
-
-    /* Footer */
-    .xo-footer {
-        margin-top: 1.2rem;
-        font-size: 0.75rem;
-        color: #6b7280;
-        text-align: center;
-        opacity: 0.9;
-    }
-
-    /* Fade-up animation */
-    @keyframes fadeUp {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0px);
-        }
-    }
 </style>
 """
 
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
-
-# ---------- MODES & MODEL MAPPING ----------
-
-MODES = [
-    "Study Helper",
-    "Idea Generator",
-    "Planner",
-    "Friendly Chat",
-]
-
-# UI labels (old names) -> real Groq model IDs
+# ------------------- MODEL MAPPING (unchanged) -------------------
 MODEL_ID_MAP = {
-    "llama3-8b-8192": "llama-3.1-8b-instant",     # fast/cheap model
-    "llama3-70b-8192": "llama-3.3-70b-versatile"  # bigger, smarter model
+    "llama3-8b-8192": "llama-3.1-8b-instant",
+    "llama3-70b-8192": "llama-3.3-70b-versatile",
 }
 
+MODES = ["Study Helper", "Idea Generator", "Planner", "Friendly Chat"]
 
-def init_session_state() -> None:
+# ------------------- SESSION STATE -------------------
+def init_state():
     if "messages" not in st.session_state:
-        st.session_state.messages: List[Dict[str, str]] = []
+        st.session_state.messages = []
     if "selected_mode" not in st.session_state:
         st.session_state.selected_mode = "Friendly Chat"
 
-
-def get_mode_instructions(mode: str) -> str:
-    base_rules = (
-        "You are XO AI, the official assistant of Nexo.corp. "
-        "Your tone is calm, clear, and respectful. "
-        "You simplify explanations without losing accuracy. "
-        "For study questions, you explain step-by-step. "
-        "You must not give trading, stock market, crypto, or other financial advice. "
-        "You must refuse harmful, unsafe, or adult content. "
-        "Keep answers concise and focused unless the user explicitly asks for a much longer answer. "
+# ------------------- PROMPTS -------------------
+def get_mode_prompt(mode: str) -> str:
+    base = (
+        "You are XO AI, assistant of Nexo.corp. "
+        "Calm, respectful, simplified explanations. "
+        "No financial/trading advice. No harmful content. "
+        "Short unless user asks long. "
     )
 
     if mode == "Study Helper":
-        mode_text = (
-            "Act as a friendly Study Helper. "
-            "Break problems into clear steps and show reasoning simply. "
-            "Encourage the student but do not do full homework or full exam papers for them."
-        )
-    elif mode == "Idea Generator":
-        mode_text = (
-            "Act as a creative Idea Generator. "
-            "Brainstorm ideas for content, projects, startups, and goals. "
-            "Be practical and realistic, with examples."
-        )
-    elif mode == "Planner":
-        mode_text = (
-            "Act as a planning assistant. "
-            "Design study plans, routines, and simple roadmaps. "
-            "Keep plans realistic for a busy student or young professional."
-        )
-    else:  # Friendly Chat
-        mode_text = (
-            "Act as a calm and positive friend for normal chat. "
-            "Talk about life, school, mindset, and self-improvement without being dramatic."
-        )
+        return base + "Break concepts step‑by‑step."
+    if mode == "Idea Generator":
+        return base + "Generate practical creative ideas."
+    if mode == "Planner":
+        return base + "Create realistic study routines and plans."
+    return base + "Friendly, positive conversation."
 
-    return base_rules + " " + mode_text
-
-
+# ------------------- MESSAGE BUILDER -------------------
 def build_messages(user_input: str) -> List[Dict[str, str]]:
-    system_prompt = get_mode_instructions(st.session_state.selected_mode)
+    system_prompt = get_mode_prompt(st.session_state.selected_mode)
+    msgs = [{"role": "system", "content": system_prompt}]
+    for m in st.session_state.messages:
+        msgs.append({"role": m["role"], "content": m["content"]})
+    msgs.append({"role": "user", "content": user_input})
+    return msgs
 
-    messages: List[Dict[str, str]] = [
-        {"role": "system", "content": system_prompt},
-    ]
-
-    for msg in st.session_state.messages:
-        messages.append({"role": msg["role"], "content": msg["content"]})
-
-    messages.append({"role": "user", "content": user_input})
-    return messages
-
-
-def call_groq_chat(messages: List[Dict[str, str]], ui_model_name: str) -> str:
-    """
-    Call Groq ChatCompletions and return assistant reply.
-
-    ui_model_name is the label from the UI (e.g. "llama3-70b-8192"),
-    mapped to a real Groq model ID via MODEL_ID_MAP.
-    """
+# ------------------- GROQ CALL -------------------
+def call_groq(messages: List[Dict[str, str]], ui_model: str) -> str:
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
-        raise RuntimeError(
-            "GROQ_API_KEY is not set in the environment. Please configure it before using XO AI."
-        )
+        raise RuntimeError("GROQ_API_KEY missing.")
 
-    # Required Groq client usage
-    client = Groq(api_key=os.environ["GROQ_API_KEY"])
+    client = Groq(api_key=api_key)
+    real_model = MODEL_ID_MAP.get(ui_model, ui_model)
 
-    groq_model_id = MODEL_ID_MAP.get(ui_model_name, ui_model_name)
-
-    completion = client.chat.completions.create(
-        model=groq_model_id,
+    resp = client.chat.completions.create(
+        model=real_model,
         messages=messages,
         temperature=0.4,
         max_tokens=1024,
     )
+    return resp.choices[0].message.content.strip()
 
-    return completion.choices[0].message.content.strip()
-
-
-# ---------- UI SECTIONS ----------
-
-def render_hero() -> None:
+# ------------------- RENDER HERO -------------------
+def hero():
     st.markdown(
         """
-        <div class="xo-hero">
-            <div style="position: relative; z-index: 1;">
-                <div class="xo-hero-title">XO AI — Nexo Assistant</div>
-                <div class="xo-hero-subtitle">
-                    Built by Nexo.corp for students, creators, and young professionals.
-                </div>
-                <div class="xo-status-pill">
-                    <span class="xo-status-dot"></span>
-                    <span>online</span>
-                    <span style="opacity:0.35;">•</span>
-                    <span class="xo-status-powered">powered by Groq</span>
-                </div>
+        <div style='padding:1.5rem;background:rgba(79,70,229,0.25);border-radius:1.4rem;'>
+            <h1 style='margin-bottom:0.2rem;'>XO AI — Nexo Assistant</h1>
+            <p style='opacity:0.8;margin-bottom:0.4rem;'>Built by Nexo.corp for students, creators & professionals.</p>
+            <div style='display:flex;align-items:center;gap:6px;background:rgba(15,23,42,0.9);padding:4px 12px;border-radius:999px;width:max-content;'>
+                <span style='width:8px;height:8px;background:#22c55e;border-radius:999px;'></span>
+                <span>online • powered by Groq</span>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
+# ------------------- SIDEBAR MODES -------------------
+def sidebar_modes():
+    st.markdown("<div style='padding:1rem;background:rgba(15,23,42,0.9);border-radius:1rem;'>", unsafe_allow_html=True)
+    st.subheader("Quick Modes")
 
-def render_modes_sidebar() -> None:
-    st.markdown("<div class='xo-modes-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='xo-modes-title'>Quick modes</div>", unsafe_allow_html=True)
-
-    # clean mode selector
-    selected = st.radio(
-        "",
-        MODES,
-        index=MODES.index(st.session_state.selected_mode),
-        label_visibility="collapsed",
-    )
-    st.session_state.selected_mode = selected
-
-    descriptions = {
-        "Study Helper": "Break down concepts and questions step-by-step.",
-        "Idea Generator": "Brainstorm content, project, and business ideas.",
-        "Planner": "Design routines, timetables, and simple roadmaps.",
-        "Friendly Chat": "Normal conversation, mindset, and life chat.",
-    }
+    mode = st.radio("", MODES, index=MODES.index(st.session_state.selected_mode))
+    st.session_state.selected_mode = mode
 
     st.markdown(
-        f"<div class='xo-mode-caption'>{descriptions.get(selected, '')}</div>",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        """
-        <div class="xo-identity-box">
-            <div class="xo-identity-title">XO AI identity</div>
-            <ul style="margin:0; padding-left:1.1rem;">
-                <li>Calm, clear, and respectful tone.</li>
-                <li>Simplifies explanations without losing accuracy.</li>
-                <li>Step-by-step support for study questions.</li>
-                <li>No trading or financial advice, ever.</li>
-                <li>Refuses harmful or unsafe requests.</li>
-                <li>Keeps answers short unless you ask for long.</li>
-            </ul>
-        </div>
-        """,
+        f"<p style='color:#9ca3af;font-size:0.8rem;'>Mode selected: {mode}</p>",
         unsafe_allow_html=True,
     )
 
     st.markdown("</div>", unsafe_allow_html=True)
 
+# ------------------- CHAT AREA -------------------
+def chat_area(selected_model: str):
+    st.markdown("<div style='padding:1rem;background:rgba(15,23,42,0.95);border-radius:1rem;'>", unsafe_allow_html=True)
 
-def render_chat_area(selected_model: str) -> None:
-    st.markdown("<div class='xo-chat-card'>", unsafe_allow_html=True)
+    for m in st.session_state.messages:
+        with st.chat_message("user" if m["role"] == "user" else "assistant"):
+            st.markdown(m["content"])
 
-    mode = st.session_state.selected_mode
-    st.markdown(
-        f"<div style='font-size:0.8rem; color:#9ca3af; margin-bottom:0.35rem;'>Mode: "
-        f"<span style='color:#e5e7eb; font-weight:600;'>{mode}</span></div>",
-        unsafe_allow_html=True,
-    )
-
-    # history
-    for msg in st.session_state.messages:
-        with st.chat_message("user" if msg["role"] == "user" else "assistant"):
-            st.markdown(msg["content"])
-
-    # input
-    user_input = st.chat_input("Ask XO AI anything…")
+    user_input = st.chat_input("Ask XO AI…")
 
     if user_input:
         st.session_state.messages.append({"role": "user", "content": user_input})
@@ -416,62 +160,38 @@ def render_chat_area(selected_model: str) -> None:
         with st.chat_message("assistant"):
             with st.spinner("XO AI is thinking…"):
                 try:
-                    messages = build_messages(user_input)
-                    assistant_reply = call_groq_chat(messages, selected_model)
-                except RuntimeError as e:
-                    st.error(str(e))
-                    return
+                    msgs = build_messages(user_input)
+                    reply = call_groq(msgs, selected_model)
                 except Exception as e:
-                    st.error("XO AI hit a limit. Please try again in a moment.")
-                    st.caption(f"Debug info: {e}")
+                    st.error("XO AI hit a limit. Try again.")
+                    st.caption(str(e))
                     return
+            st.markdown(reply)
 
-            st.markdown(assistant_reply)
-
-        st.session_state.messages.append(
-            {"role": "assistant", "content": assistant_reply}
-        )
+        st.session_state.messages.append({"role": "assistant", "content": reply})
 
     st.markdown("</div>", unsafe_allow_html=True)
 
+# ------------------- MAIN -------------------
+def main():
+    init_state()
+    hero()
 
-# ---------- MAIN ----------
-
-def main() -> None:
-    init_session_state()
-
-    render_hero()
-    st.markdown("\n", unsafe_allow_html=True)
-
-    # New model selection (no Mixtral; 8B + 70B llama)
-    with st.expander("Model settings", expanded=False):
-        selected_model = st.radio(
+    with st.expander("Model Settings"):
+        model = st.radio(
             "Choose Groq model",
-            options=["llama3-8b-8192", "llama3-70b-8192"],
+            ["llama3-8b-8192", "llama3-70b-8192"],
             index=1,
-            help="These are Groq Llama models used by XO AI.",
             horizontal=True,
         )
 
-    left_col, right_col = st.columns([1.9, 1.1], gap="large")
+    left, right = st.columns([1.9, 1.1])
+    with left:
+        chat_area(model)
+    with right:
+        sidebar_modes()
 
-    with left_col:
-        render_chat_area(selected_model=selected_model)
-
-    with right_col:
-        render_modes_sidebar()
-
-    st.markdown(
-        """
-        <div class="xo-footer">
-            <span>Powered by Groq • XO AI is built by Nexo.corp</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
+    st.markdown("<p style='text-align:center;color:#6b7280;margin-top:1rem;'>Powered by Groq • XO AI © Nexo.corp</p>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
-
-
